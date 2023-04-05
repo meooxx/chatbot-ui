@@ -178,7 +178,7 @@ export const Chat: FC<Props> = memo(
                 <Link
                   className="ml-2 mr-2 text-blue-500 hover:underline"
                   href={{
-                    pathname: '/api/auth/sign',
+                    pathname: '/api/auth/signin',
                   }}
                 >
                   {tLogin('Login')}
