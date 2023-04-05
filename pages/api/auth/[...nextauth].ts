@@ -14,7 +14,8 @@ export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
       type: 'credentials',
-      name: '',
+      id: 'credentials',
+      name: 'credentials',
       credentials: {
         username: { label: 'username', type: 'text' },
         pwd: { label: 'PWD', type: 'password' },
@@ -78,9 +79,13 @@ export const authOptions: NextAuthOptions = {
       }
       return false;
     },
-    async redirect({}) {
-      return '/';
+    async redirect({ url, baseUrl }) {
+      if (url.startsWith('/')) return `${url}`;
+      // Allows callback URLs on the same origin
+      else if (new URL(url).origin === baseUrl) return url;
+      return baseUrl;
     },
   },
+  debug: true,
 };
 export default NextAuth(authOptions);

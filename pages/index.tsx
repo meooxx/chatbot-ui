@@ -35,20 +35,20 @@ import Head from 'next/head';
 import { useEffect, useRef, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import toast from 'react-hot-toast';
-import { getServerSession } from 'next-auth';
+import { getServerSession, Session } from 'next-auth';
 import { authOptions } from './api/auth/[...nextauth]';
+import { useSession } from 'next-auth/react';
 
 interface HomeProps {
   serverSideApiKeyIsSet: boolean;
   defaultModelId: OpenAIModelID;
+  session: Session;
 }
 
-const Home: React.FC<HomeProps> = ({
-  serverSideApiKeyIsSet,
-  defaultModelId,
-}) => {
+const Home: React.FC<HomeProps> = (props) => {
+  const { serverSideApiKeyIsSet, defaultModelId } = props;
   const { t } = useTranslation('chat');
-
+  const session = useSession();
   // STATE ----------------------------------------------
 
   const [apiKey, setApiKey] = useState<string>('');
@@ -557,6 +557,13 @@ const Home: React.FC<HomeProps> = ({
       fetchModels(apiKey);
     }
   }, [apiKey]);
+  useEffect(() => {
+    // @ts-expect-error
+    if (session.data?.user?.userId) {
+      fetchModels(apiKey);
+    }
+    // @ts-expect-error
+  }, [session.data?.user?.userId]);
 
   // ON LOAD --------------------------------------------
 
@@ -569,9 +576,6 @@ const Home: React.FC<HomeProps> = ({
     const apiKey = localStorage.getItem('apiKey');
     if (apiKey) {
       setApiKey(apiKey);
-      fetchModels(apiKey);
-    } else if (serverSideApiKeyIsSet) {
-      fetchModels('');
     }
 
     if (window.innerWidth < 640) {

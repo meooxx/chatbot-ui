@@ -7,16 +7,17 @@ export const config = {
 export default withAuth({
   callbacks: {
     async authorized({ req, token }) {
-      
       try {
-        const { key } = (await req.json()) as {
+        if (token) return true;
+        const json = (await req.json().catch((e) => {
+          console.log(e);
+        })) as {
           key: string;
         };
-        if (token || key) return true; // If there is a token, the user is authenticated
+        if (json?.key) return true; // If there is a token, the user is authenticated
       } catch (e) {
-        console.log(e);
+        console.log(e, 'parse token');
       }
-
       return false;
     },
   },
