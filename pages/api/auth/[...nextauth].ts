@@ -72,6 +72,15 @@ export const authOptions: NextAuthOptions = {
       };
       return session;
     },
+    async signIn({ account }) {
+      if (account) {
+        return true;
+      }
+      return false;
+    },
+    async redirect({}) {
+      return '/';
+    },
   },
 };
 export default NextAuth(authOptions);

@@ -74,8 +74,8 @@ const handler = async (
       if (tokenCount > (balance?.amount || 0)) {
         res.status(403);
         res.end('对不起您的token消耗完毕');
+        return;
       }
-      return;
     }
 
     const readstream = await OpenAIStream(
