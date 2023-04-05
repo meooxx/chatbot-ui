@@ -1,5 +1,4 @@
 import { Conversation } from '@/types/chat';
-import { OpenAIModelID } from '@/types/openai';
 import { Prompt } from '@/types/prompt';
 import { DEFAULT_SYSTEM_PROMPT } from '@/utils/app/const';
 import { useTranslation } from 'next-i18next';
@@ -26,7 +25,6 @@ export const SystemPrompt: FC<Props> = ({
   onChangePrompt,
 }) => {
   const { t } = useTranslation('chat');
-
   const [value, setValue] = useState<string>('');
   const [activePromptIndex, setActivePromptIndex] = useState(0);
   const [showPromptList, setShowPromptList] = useState(false);
@@ -187,7 +185,6 @@ export const SystemPrompt: FC<Props> = ({
       window.removeEventListener('click', handleOutsideClick);
     };
   }, []);
-
   return (
     <div className="flex flex-col">
       <label className="mb-2 text-left text-neutral-700 dark:text-neutral-400">

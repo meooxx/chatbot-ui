@@ -1,12 +1,20 @@
 import { SupportedExportFormats } from '@/types/export';
-import { IconFileExport, IconMoon, IconSun } from '@tabler/icons-react';
+import {
+  IconFileExport,
+  IconMoon,
+  IconSun,
+  IconLogin,
+} from '@tabler/icons-react';
 import { useTranslation } from 'next-i18next';
-import { FC } from 'react';
+import { FC, useState } from 'react';
 import { Import } from '../Settings/Import';
 import { Key } from '../Settings/Key';
 import { SidebarButton } from '../Sidebar/SidebarButton';
 import { ClearConversations } from './ClearConversations';
-
+// import { LoginModal } from './loginModal';
+// import { useState } from 'react';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/router';
 interface Props {
   lightMode: 'light' | 'dark';
   apiKey: string;
@@ -29,6 +37,8 @@ export const ChatbarSettings: FC<Props> = ({
   onImportConversations,
 }) => {
   const { t } = useTranslation('sidebar');
+  const session = useSession();
+  const router = useRouter();
   return (
     <div className="flex flex-col items-center space-y-1 border-t border-white/20 pt-1 text-sm">
       {conversationsCount > 0 ? (
@@ -52,6 +62,15 @@ export const ChatbarSettings: FC<Props> = ({
           onToggleLightMode(lightMode === 'light' ? 'dark' : 'light')
         }
       />
+      <div className="relative w-full">
+        {!session.data?.user.userId && (
+          <SidebarButton
+            text={t('Login')}
+            icon={<IconLogin size={18} />}
+            onClick={() => router.push('/api/auth/signin')}
+          />
+        )}
+      </div>
 
       <Key apiKey={apiKey} onApiKeyChange={onApiKeyChange} />
     </div>

@@ -13,6 +13,9 @@ const nextConfig = {
 
     return config;
   },
+  env: {
+    DEFAULT_SYSTEM_PROMPT: process.env.DEFAULT_SYSTEM_PROMPT,
+  },
 };
 
 module.exports = nextConfig;

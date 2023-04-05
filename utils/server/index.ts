@@ -6,7 +6,9 @@ import {
   ReconnectInterval,
 } from 'eventsource-parser';
 import { OPENAI_API_HOST } from '../app/const';
-
+import fetch from 'node-fetch';
+import baseFetchOptions from '../proxy';
+import { ReadableStream } from 'node:stream/web';
 export class OpenAIError extends Error {
   type: string;
   param: string;
@@ -28,6 +30,7 @@ export const OpenAIStream = async (
   messages: Message[],
 ) => {
   const res = await fetch(`${OPENAI_API_HOST}/v1/chat/completions`, {
+    ...baseFetchOptions,
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${key ? key : process.env.OPENAI_API_KEY}`,
@@ -55,7 +58,11 @@ export const OpenAIStream = async (
   const decoder = new TextDecoder();
 
   if (res.status !== 200) {
-    const result = await res.json();
+    const result = (await res.json()) as {
+      error: OpenAIError;
+      statusText: string;
+      value: BufferSource;
+    };
     if (result.error) {
       throw new OpenAIError(
         result.error.message,
