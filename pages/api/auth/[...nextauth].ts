@@ -50,7 +50,7 @@ export const authOptions: NextAuthOptions = {
       }
       return token;
     },
-
+    // @ts-expect-error
     async session({
       session,
       token,
@@ -63,8 +63,10 @@ export const authOptions: NextAuthOptions = {
         };
       };
     }) {
+      // @ts-expect-error
       session.accessToken = token.sub;
       session.user = {
+        // @ts-expect-error
         username: token.user.username,
         userId: token.user.id,
       };

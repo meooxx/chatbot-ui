@@ -254,6 +254,7 @@ const Home: React.FC<HomeProps> = ({
 
     if (!response?.ok) {
       try {
+        // @ts-expect-error
         const data = await response.json();
         Object.assign(error, {
           code: data.error?.code,

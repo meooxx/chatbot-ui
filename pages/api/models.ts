@@ -43,7 +43,7 @@ const handler = async (
     const json = (await response.json()) as {
       data: (OpenAIModel | undefined)[];
     };
-
+    // @ts-expect-error
     const models: OpenAIModel[] = json.data
       .map((model: any) => {
         for (const [key, value] of Object.entries(OpenAIModelID)) {

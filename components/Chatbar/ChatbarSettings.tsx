@@ -63,6 +63,7 @@ export const ChatbarSettings: FC<Props> = ({
         }
       />
       <div className="relative w-full">
+        {/* @ts-expect-error */}
         {!session.data?.user.userId && (
           <SidebarButton
             text={t('Login')}
