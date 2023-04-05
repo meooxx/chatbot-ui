@@ -76,6 +76,7 @@ const handler = async (
         res.status(403);
         res.end('对不起您的token消耗完毕');
       }
+      return;
     }
 
     const readstream = await OpenAIStream(
