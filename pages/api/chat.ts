@@ -10,7 +10,7 @@ import { OpenAIError, OpenAIStream } from '@/utils/server';
 // const { load } = require('@dqbd/tiktoken/load');
 // const registry = require('@dqbd/tiktoken/registry.json');
 // const models = require('@dqbd/tiktoken/model_to_encoding.json');
-const { encode, decode } = require('gpt-3-encoder');
+import { encode } from 'gpt-3-encoder';
 
 import { NextApiRequest, NextApiResponse } from 'next';
 import prisma from '@/lib/prisma';

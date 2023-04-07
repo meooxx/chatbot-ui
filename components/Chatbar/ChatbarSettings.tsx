@@ -4,6 +4,7 @@ import {
   IconMoon,
   IconSun,
   IconLogin,
+  IconLogout,
 } from '@tabler/icons-react';
 import { useTranslation } from 'next-i18next';
 import { FC, useState } from 'react';
@@ -13,8 +14,9 @@ import { SidebarButton } from '../Sidebar/SidebarButton';
 import { ClearConversations } from './ClearConversations';
 // import { LoginModal } from './loginModal';
 // import { useState } from 'react';
-import { useSession } from 'next-auth/react';
+import { signOut, useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
+import { sign } from 'node:crypto';
 interface Props {
   lightMode: 'light' | 'dark';
   apiKey: string;
@@ -64,13 +66,22 @@ export const ChatbarSettings: FC<Props> = ({
       />
       <div className="relative w-full">
         {/* @ts-expect-error */}
-        {!session.data?.user.userId && (
-          <SidebarButton
-            text={t('Login')}
-            icon={<IconLogin size={18} />}
-            onClick={() => router.push('/api/auth/signin')}
-          />
-        )}
+        {!session.data?.user.userId &&
+          ((
+            <SidebarButton
+              text={t('Login')}
+              icon={<IconLogin size={18} />}
+              onClick={() => router.push('/api/auth/signin')}
+            />
+          ) ||
+          // todo
+           (
+            <SidebarButton
+              text={t('Logout')}
+              icon={<IconLogout size={18} />}
+              onClick={() => signOut()}
+            />
+          ))}
       </div>
 
       <Key apiKey={apiKey} onApiKeyChange={onApiKeyChange} />

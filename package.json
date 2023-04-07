@@ -9,7 +9,8 @@
     "lint": "next lint",
     "format": "prettier --write .",
     "test": "vitest",
-    "coverage": "vitest run --coverage"
+    "coverage": "vitest run --coverage",
+    "postinstall": "npx prisma generate"
   },
   "dependencies": {
     "@dqbd/tiktoken": "^1.0.2",

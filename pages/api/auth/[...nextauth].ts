@@ -24,7 +24,7 @@ export const authOptions: NextAuthOptions = {
       async authorize(credentials = {}, req) {
         const { username, pwd } = credentials;
         if (!username || !pwd) {
-          throw new Error('Missing username or password');
+          return null;
         }
         const user = await prisma.user.findUnique({
           where: {
@@ -34,9 +34,7 @@ export const authOptions: NextAuthOptions = {
 
         // if user doesn't exist or password doesn't match
         if (!user || !(await compare(`${pwd}${pwd}`, user.pwd))) {
-          throw {
-            message: 'Invalid username or password',
-          };
+          return null;
         }
         return user;
       },
@@ -86,6 +84,6 @@ export const authOptions: NextAuthOptions = {
       return baseUrl;
     },
   },
-  debug: true,
+  debug: process.env.NODE_ENV !== 'production',
 };
 export default NextAuth(authOptions);
