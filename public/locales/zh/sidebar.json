@@ -11,5 +11,6 @@
   "Dark mode": "深色模式",
   "Light mode": "浅色模式",
 
-  "Login": "登录"
+  "Login": "登录",
+  "Logout": "登出"
 }

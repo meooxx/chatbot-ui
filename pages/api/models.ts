@@ -1,21 +1,31 @@
 import { OpenAIModel, OpenAIModelID, OpenAIModels } from '@/types/openai';
 import { OPENAI_API_HOST } from '@/utils/app/const';
 import baseFetchOptions from '@/utils/proxy';
-import { NextApiResponse } from 'next';
+import { NextApiRequest, NextApiResponse } from 'next';
 import fetch from 'node-fetch';
+import { getToken } from 'next-auth/jwt';
+import prisma from '@/lib/prisma';
+import { checkToken } from '@/utils/checkToken';
 export const config = {
   // runtime: 'edge',
 };
 
 const handler = async (
-  req: Request,
+  req: NextApiRequest,
   res: NextApiResponse,
 ): Promise<NextApiResponse | void> => {
   try {
     const { key } = req.body as unknown as {
       key: string;
     };
-
+    if (!key) {
+      const [valid] = await checkToken(req);
+      if (!valid) {
+        res.status(401);
+        res.end();
+        return;
+      }
+    }
     const response = await fetch(`${OPENAI_API_HOST}/v1/models`, {
       ...baseFetchOptions,
       headers: {

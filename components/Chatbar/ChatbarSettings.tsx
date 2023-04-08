@@ -64,25 +64,21 @@ export const ChatbarSettings: FC<Props> = ({
           onToggleLightMode(lightMode === 'light' ? 'dark' : 'light')
         }
       />
-      <div className="relative w-full">
-        {/* @ts-expect-error */}
-        {!session.data?.user.userId &&
-          ((
-            <SidebarButton
-              text={t('Login')}
-              icon={<IconLogin size={18} />}
-              onClick={() => router.push('/api/auth/signin')}
-            />
-          ) ||
-          // todo
-           (
-            <SidebarButton
-              text={t('Logout')}
-              icon={<IconLogout size={18} />}
-              onClick={() => signOut()}
-            />
-          ))}
-      </div>
+      {/* @ts-expect-error */}
+      {(!session.data?.user.userId && (
+        <SidebarButton
+          text={t('Login')}
+          icon={<IconLogin size={18} />}
+          onClick={() => router.push('/api/auth/signin')}
+        />
+      )) || (
+        // todo
+        <SidebarButton
+          text={t('Logout')}
+          icon={<IconLogout size={18} />}
+          onClick={() => signOut()}
+        />
+      )}
 
       <Key apiKey={apiKey} onApiKeyChange={onApiKeyChange} />
     </div>

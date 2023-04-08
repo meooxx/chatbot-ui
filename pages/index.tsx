@@ -37,7 +37,7 @@ import { v4 as uuidv4 } from 'uuid';
 import toast from 'react-hot-toast';
 import { getServerSession, Session } from 'next-auth';
 import { authOptions } from './api/auth/[...nextauth]';
-import { useSession } from 'next-auth/react';
+import { signOut, useSession } from 'next-auth/react';
 
 interface HomeProps {
   serverSideApiKeyIsSet: boolean;
@@ -119,7 +119,11 @@ const Home: React.FC<HomeProps> = (props) => {
         signal: controller.signal,
         body: JSON.stringify(chatBody),
       });
-
+      if (response.status == 401) {
+        toast.error('登录失效');
+        signOut();
+        return;
+      }
       if (!response.ok) {
         setLoading(false);
         setMessageIsStreaming(false);
@@ -251,7 +255,11 @@ const Home: React.FC<HomeProps> = (props) => {
     }).catch((e) => {
       console.log('fetch error', e);
     });
-
+    if (response?.status == 401) {
+      toast.error('登录失效');
+      signOut();
+      return;
+    }
     if (!response?.ok) {
       try {
         // @ts-expect-error

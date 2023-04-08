@@ -78,8 +78,7 @@ export const OpenAIStream = async (
       );
     }
   }
-
-  const stream = new ReadableStream({
+  const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
       const onParse = (event: ParsedEvent | ReconnectInterval) => {
         if (event.type === 'event') {
@@ -92,9 +91,9 @@ export const OpenAIStream = async (
 
           try {
             const json = JSON.parse(data);
-            const text = json.choices[0].delta.content;
+            const text = <string>json.choices[0].delta.content;
             const queue = encoder.encode(text);
-            controller.enqueue(queue);
+            controller.enqueue(Buffer.from(queue));
           } catch (e) {
             controller.error(e);
           }

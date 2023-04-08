@@ -5,10 +5,6 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 import prisma from '@/lib/prisma';
 import { compare } from 'bcrypt';
 import { JWT } from 'next-auth/jwt';
-type User = {
-  username?: string;
-  userId?: string;
-};
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -71,12 +67,7 @@ export const authOptions: NextAuthOptions = {
       };
       return session;
     },
-    async signIn({ account }) {
-      if (account) {
-        return true;
-      }
-      return false;
-    },
+
     async redirect({ url, baseUrl }) {
       if (url.startsWith('/')) return `${url}`;
       // Allows callback URLs on the same origin

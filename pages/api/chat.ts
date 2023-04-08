@@ -18,29 +18,29 @@ import prisma from '@/lib/prisma';
 // import wasm from '../../node_modules/@dqbd/tiktoken/lite/tiktoken_bg.wasm?module';
 import { getToken } from 'next-auth/jwt';
 import type { Balance } from '@prisma/client';
-
+import { checkToken } from '@/utils/checkToken';
+import { User } from 'next-auth';
 export const config = {};
 
 const handler = async (
   req: NextApiRequest,
   res: NextApiResponse,
 ): Promise<Response | void> => {
-  type Token = {
-    user: {
-      id: string;
-    };
-  };
   let balance: Balance | null = null;
-  let token: Token | null = null;
+  let user: User | null = null;
   try {
     const { model, messages, key, prompt } = req.body as ChatBody;
     if (!key) {
-      token = (await getToken({ req })) as Token;
-
-      const userId = token.user.id;
+      const [valid, u] = await checkToken(req);
+      if (!valid) {
+        res.status(401);
+        res.end();
+        return;
+      }
       balance = await prisma.balance.findUnique({
-        where: { userId },
+        where: { userId: u.id },
       });
+      user = u;
     }
 
     // await init((imports) => WebAssembly.instantiate(wasm, imports));
@@ -84,22 +84,26 @@ const handler = async (
       key,
       messagesToSend,
     );
-    if (!key) {
-      await prisma.balance.update({
-        where: {
-          userId: token!.user.id,
-        },
-        data: {
-          amount: balance!.amount - tokenCount,
-        },
-      });
-    }
+    const anwser: string[] = [];
+    const decoder = new TextDecoder();
 
     for await (const chunk of readstream.values()) {
-      const bf = Buffer.from(chunk);
-      res.write(bf);
+      anwser.push(decoder.decode(chunk));
+      res.write(chunk);
     }
+
     res.end();
+
+    if (!key) {
+      const a = anwser.join('');
+      tokenCount += encode(a).length;
+      await prisma.$transaction([
+        prisma.balance.update({
+          where: { userId: user?.id },
+          data: { amount: { decrement: tokenCount } },
+        }),
+      ]);
+    }
   } catch (error) {
     console.error(error);
     if (error instanceof OpenAIError) {
