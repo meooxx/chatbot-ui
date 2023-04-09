@@ -1,27 +1,13 @@
 import { ChatBody, Message } from '@/types/chat';
-import { DEFAULT_SYSTEM_PROMPT } from '@/utils/app/const';
-import { OpenAIError, OpenAIStream } from '@/utils/server';
-// import tiktokenModel from '@dqbd/tiktoken/encoders/cl100k_base.json';
-// import {
-// Tiktoken,
-// init
-// } from '@dqbd/tiktoken/lite/init';
-// const { Tiktoken } = require('@dqbd/tiktoken/lite');
-// const { load } = require('@dqbd/tiktoken/load');
-// const registry = require('@dqbd/tiktoken/registry.json');
-// const models = require('@dqbd/tiktoken/model_to_encoding.json');
+import { OpenAIError } from '@/utils/server';
+import { PythonShell } from 'python-shell';
 import { encode } from 'gpt-3-encoder';
-
 import { NextApiRequest, NextApiResponse } from 'next';
 import prisma from '@/lib/prisma';
-//// @ts-expect-error
-// import wasm from '../../node_modules/@dqbd/tiktoken/lite/tiktoken_bg.wasm?module';
-import { getToken } from 'next-auth/jwt';
 import type { Balance } from '@prisma/client';
 import { checkToken } from '@/utils/checkToken';
 import { User } from 'next-auth';
 export const config = {};
-
 const handler = async (
   req: NextApiRequest,
   res: NextApiResponse,
@@ -43,34 +29,19 @@ const handler = async (
       user = u;
     }
 
-    // await init((imports) => WebAssembly.instantiate(wasm, imports));
-    // const tiktokenModel = await load(registry[models['gpt-3.5-turbo']]);
-    // const encoding = new Tiktoken(
-    //   tiktokenModel.bpe_ranks,
-    //   tiktokenModel.special_tokens,
-    //   tiktokenModel.pat_str,
-    // );
-
-    let promptToSend = prompt;
-    if (!promptToSend) {
-      promptToSend = DEFAULT_SYSTEM_PROMPT;
-    }
-
-    const prompt_tokens = encode(promptToSend);
     // role name + every reply is primed with <im_start>assistant
-    let tokenCount = prompt_tokens.length + 4 + 2;
+    let tokenCount = 4 + 2;
     let messagesToSend: Message[] = [];
 
     for (let i = messages.length - 1; i >= 0; i--) {
       const message = messages[i];
       const tokens = encode(message.content);
-      if (tokenCount + tokens.length + 1000 > model.tokenLimit) {
+      tokenCount += tokens.length;
+      if (tokenCount + 1000 > model.maxLength) {
         break;
       }
-      tokenCount += tokens.length;
-      messagesToSend = [message, ...messagesToSend];
+      messagesToSend = [message].concat(messagesToSend);
       if (message.isSummary) {
-        delete message.isSummary;
         break;
       }
     }
@@ -81,25 +52,49 @@ const handler = async (
         return;
       }
     }
-    const readstream = await OpenAIStream(
-      model,
-      promptToSend,
-      key,
-      messagesToSend,
-    );
-    const anwser: string[] = [];
-    const decoder = new TextDecoder();
 
-    for await (const chunk of readstream.values()) {
-      anwser.push(decoder.decode(chunk));
-      res.write(chunk);
+    if (tokenCount >= 1000) {
+      type MessageItem = [{ input: string }, { output: string }];
+      const messageData: MessageItem[] = [];
+
+      for (let msgIndex = 0; msgIndex < messages.length - 1; msgIndex++) {
+        const item: MessageItem = [
+          { input: messages[msgIndex++].content },
+          { output: '' },
+        ];
+
+        if (messages[msgIndex].role !== 'user') {
+          item[1] = { output: messages[msgIndex].content };
+        }
+
+        messageData.push(item);
+      }
+
+      const summary = await new Promise<string>((resolve, reject) => {
+        const text = <Buffer[]>[];
+        let pyshell = new PythonShell('./lib/main.py', {
+          // mode: 'binary',
+          pythonPath: 'python3',
+          encoding: 'utf8',
+        });
+        pyshell.send(JSON.stringify(messageData));
+        pyshell.on('message', function (message) {
+          text.push(message);
+        });
+
+        pyshell.end(function (err, code, signal) {
+          if (err) reject(err);
+          console.log('The exit code was: ' + code);
+          console.log('The exit signal was: ' + signal);
+          resolve(text.join(''));
+        });
+      });
+      res.send({ ok: true, summary });
+    } else {
+      res.send({ ok: false });
     }
 
-    res.end();
-
     if (!key) {
-      const a = anwser.join('');
-      tokenCount += encode(a).length;
       await prisma.$transaction([
         prisma.balance.update({
           where: { userId: user?.id },
@@ -107,6 +102,7 @@ const handler = async (
         }),
       ]);
     }
+    return;
   } catch (error) {
     console.error(error);
     if (error instanceof OpenAIError) {

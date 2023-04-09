@@ -109,6 +109,40 @@ const Home: React.FC<HomeProps> = (props) => {
         key: apiKey,
         prompt: updatedConversation.prompt,
       };
+      const summaryRes = await fetch('/api/summary', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(chatBody),
+      });
+
+      if (!summaryRes.ok) {
+        toast.error('总结上文出错');
+        return;
+      }
+      const summary = (await summaryRes.json()) as {
+        ok: boolean;
+        summary: string;
+      };
+      // 做一次总结上文
+      if (summary.ok) {
+        const updatedMessages = updatedConversation.messages;
+        const latest = updatedMessages.pop() as Message;
+        updatedMessages.push(
+          {
+            role: 'system',
+            content: summary.summary,
+            isSummary: true,
+          },
+          latest,
+        );
+        setSelectedConversation({
+          ...updatedConversation,
+          messages: [...updatedMessages],
+        });
+        chatBody.messages = updatedMessages;
+      }
 
       const controller = new AbortController();
       const response = await fetch('/api/chat', {

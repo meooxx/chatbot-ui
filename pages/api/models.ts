@@ -3,8 +3,6 @@ import { OPENAI_API_HOST } from '@/utils/app/const';
 import baseFetchOptions from '@/utils/proxy';
 import { NextApiRequest, NextApiResponse } from 'next';
 import fetch from 'node-fetch';
-import { getToken } from 'next-auth/jwt';
-import prisma from '@/lib/prisma';
 import { checkToken } from '@/utils/checkToken';
 export const config = {
   // runtime: 'edge',
